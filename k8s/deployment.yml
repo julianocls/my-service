@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-services
+  labels:
+    app: my-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-services
+  template:
+    metadata:
+      labels:
+        app: my-services
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: my-services
+          image: my-services:0.1
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 9999
+              name: http
+
+          env:
+            - name: JAVA_OPTS
+              value: "-Xms256m -Xmx512m"
+
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1024Mi"
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9999
+            initialDelaySeconds: 12
+            periodSeconds: 10
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9999
+            initialDelaySeconds: 25
+            periodSeconds: 15
+            failureThreshold: 3

@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: my-service
+
+server:
+  port: 9999
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+  server:
+    port: 9999
