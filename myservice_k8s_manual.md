@@ -195,17 +195,6 @@ Você receberá:
 5 unseal keys
 1 root token
 
-Ex:
-```
-Unseal Key 1: J+Kkd9LpFlQ9ushbsiKb9UPpxeL9TarwKLVqXSmPkWTr
-Unseal Key 2: yaO/wo9oefdo0hwIBcUozfaE0H95Mn0VwNgCl0JjjOqS
-Unseal Key 3: sD5qAL+1DBpoZQBtpPVl4VPu1M6SuPBDu+aPzMp5PR6f
-Unseal Key 4: XQJV4kKZ+wqsnSahes9LnjS5Ze1Xm2T527oHaLeoiFEM
-Unseal Key 5: GhPr+bc0dYkN6AjRLURlWlUNxIb4K9KFN9fV7CGjwFqq
-
-Initial Root Token: hvs.7r64Lw1zBanzewe8mw9orTc0
-```
-
 Guarde isso com cuidado (nem versiona, nem perde).
 Unseal (toda vez que subir o Vault)
 
