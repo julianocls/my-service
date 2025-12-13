@@ -203,14 +203,6 @@ Guarde, ex:
 - Unseal Keys
 - Root Token
 
-Unseal Key 1: yoDNJ2sDp0OyonQ8qnGasWUzz1TK2YUEwl15yvcBRDbp
-Unseal Key 2: wBiDT2aB0B6uGCvZMROCW/cMLLJLnXV6ziDqkkEjXZf0
-Unseal Key 3: YA2bVTbK85r3j2UnNtyLUpQVUepGCgYOjggSO76/EYpO
-Unseal Key 4: eyktxLyGHRxOn9ZXlk944mbK99XQVkc0igsQBgB5/XDi
-Unseal Key 5: rnJz0OqlEvTEoEZAYnDrB1pb5t2fe614HoPE6c26KvEq
-
-Initial Root Token: hvs.8xZsVosCNM5kHzBr1YCZTTsB
-
 ---
 
 ## Unseal (sempre que iniciar)
