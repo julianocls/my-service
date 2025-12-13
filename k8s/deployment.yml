@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-services
+  namespace: my-service
   labels:
     app: my-services
 spec:
@@ -13,13 +14,28 @@ spec:
     metadata:
       labels:
         app: my-services
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "my-service"
+        vault.hashicorp.com/vault-address: "http://host.minikube.internal:8200"
+        vault.hashicorp.com/agent-inject-secret-env: "secret/data/my-service"
+        vault.hashicorp.com/agent-inject-template-env: |
+          {{- with secret "secret/data/my-service" -}}
+          {{- range $k, $v := .Data.data }}
+          export {{ $k }}="{{ $v }}"
+          {{- end }}
+          {{- end }}
     spec:
+      serviceAccountName: my-service-sa
       terminationGracePeriodSeconds: 5
       containers:
         - name: my-services
           image: my-services:0.1
           imagePullPolicy: IfNotPresent
-
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              source /vault/secrets/env && exec java $JAVA_OPTS -jar app.jar
           ports:
             - containerPort: 9999
               name: http
