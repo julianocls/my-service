@@ -203,6 +203,14 @@ Guarde, ex:
 - Unseal Keys
 - Root Token
 
+Unseal Key 1: yoDNJ2sDp0OyonQ8qnGasWUzz1TK2YUEwl15yvcBRDbp
+Unseal Key 2: wBiDT2aB0B6uGCvZMROCW/cMLLJLnXV6ziDqkkEjXZf0
+Unseal Key 3: YA2bVTbK85r3j2UnNtyLUpQVUepGCgYOjggSO76/EYpO
+Unseal Key 4: eyktxLyGHRxOn9ZXlk944mbK99XQVkc0igsQBgB5/XDi
+Unseal Key 5: rnJz0OqlEvTEoEZAYnDrB1pb5t2fe614HoPE6c26KvEq
+
+Initial Root Token: hvs.8xZsVosCNM5kHzBr1YCZTTsB
+
 ---
 
 ## Unseal (sempre que iniciar)
@@ -295,7 +303,7 @@ kubectl -n vault create token vault-auth
 ### Agora use esse token no Vault
 ``` bash
   vault write auth/kubernetes/config \
-token_reviewer_jwt="eyJhbGciOiJSUzI1NiIsImtpZCI6IjVleHpQS1dzMDNyd0lEV2l0RHpOTk1SNmhVdmVSV3dKUm5rMkFNdmsydWMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJ2YXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJ2YXVsdC1hdXRoLXRva2VuIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InZhdWx0LWF1dGgiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJhMTE3ZWZhOC0yNjY4LTQyZmMtODBjNy00NTJjOGNhNzJmZWEiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6dmF1bHQ6dmF1bHQtYXV0aCJ9.FxrDqsrIGHxSJfHiQ1kbQT1_yGKb7x9JnPBgyjzW5pOA3P4TrdcdJYiPhjIxoq2___E6hEn2v3IjORhSRsPfC1ZL9Nsw7_w2eE36wybU0lW4iOsE-9sc13WlwH08dsmEdfz5zV-nN5g5o7p1VpJyzyBd8pbk4bkbuGXlnGzTgDFXLJoHlWskpToCpo4TbLFihlcoBc821sJjZU4I5k73cYRv_R2MvqU4JjbcIzLyETP-bGby5VQvfQreU5orUaogEZr2HFj3PWw3e5eacbZrBxAxaOwOFtgIllYESHPnaeuEE77Ke-YSkCr3LMOCWeyKZUItwYcCgK3I-jiNashTEA%" \
+token_reviewer_jwt="<TOKEN>" \
 kubernetes_host="$(kubectl config view --raw --minify -o jsonpath='{.clusters[0].cluster.server}')" \
 kubernetes_ca_cert=@/tmp/ca.crt
 ```
