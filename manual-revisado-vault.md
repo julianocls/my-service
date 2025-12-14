@@ -236,11 +236,11 @@ Guarde, ex:
 - Unseal Keys
 - Root Token
 
-Unseal Key 1: 
-Unseal Key 2: 
-Unseal Key 3: 
-Unseal Key 4: 
-Unseal Key 5: 
+Unseal Key 1: ....
+Unseal Key 2: ....
+Unseal Key 3: ....
+Unseal Key 4: ...
+Unseal Key 5: ...
 
 Initial Root Token: 
 
