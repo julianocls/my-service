@@ -19,10 +19,16 @@ spec:
         vault.hashicorp.com/role: "my-service"
         vault.hashicorp.com/vault-address: "http://host.minikube.internal:8200"
 
-        # Vault injeta ENV diretamente
-        vault.hashicorp.com/agent-inject-secret-config: "secret/data/my-service"
-        vault.hashicorp.com/agent-inject-template-config: |
+        # Secrets my-service
+        vault.hashicorp.com/agent-inject-secret-env: "secret/data/my-service"
+        vault.hashicorp.com/agent-inject-template-env: |
           {{- with secret "secret/data/my-service" -}}
+          {{- range $k, $v := .Data.data }}
+          {{ $k }}={{ $v }}
+          {{- end }}
+          {{- end }}
+      
+          {{- with secret "secret/data/auth-system-token" -}}
           {{- range $k, $v := .Data.data }}
           {{ $k }}={{ $v }}
           {{- end }}
@@ -37,8 +43,12 @@ spec:
           image: my-services:0.1
           imagePullPolicy: IfNotPresent
 
-          command: ["java"]
-          args: ["-jar", "app.jar"]
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -a
+              . /vault/secrets/env
+              exec java -jar app.jar
 
           ports:
             - containerPort: 9999
