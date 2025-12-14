@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/")
+@RequestMapping(value = "/", produces = "application/json")
 public class TestController {
 
     private static final String HELLO_MESSAGE = "Hello Kubernetes";
 
-    @GetMapping("/hello")
+    @GetMapping(path = {"/hello", "/hello/"})
     @ResponseStatus(HttpStatus.OK)
     public String getHello() {
         return HELLO_MESSAGE;

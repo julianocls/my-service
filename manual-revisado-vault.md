@@ -3,57 +3,77 @@
 ## 1. Pré-requisitos
 
 ```bash
-brew install minikube
-brew install kubectl
-brew install kubectx
-brew install fzf
-$(brew --prefix)/opt/fzf/install
+  brew install minikube
+  brew install kubectl
+  brew install kubectx
 
-kubectl create namespace my-service
-kubectl create sa my-service-sa -n my-service
-
-brew tap hashicorp/tap
-brew install hashicorp/tap/vault
-
-kubectl create namespace vault
-brew install helm@3
-brew link --force helm@3
-
+  brew install fzf
+  $(brew --prefix)/opt/fzf/install
+    
+  kubectl create namespace my-service
+  kubectl create sa my-service-sa -n my-service
+    
+  brew tap hashicorp/tap
+  brew install hashicorp/tap/vault
+    
+  kubectl create namespace vault
+  brew install helm@3
+  brew link --force helm@3
 ```
 
--   macOS com Homebrew
--   Minikube instalado
--   Hyperkit instalado (`brew install hyperkit`)
--   Kubectl instalado
--   Docker instalado
-
-------------------------------------------------------------------------
+---
 
 ## 2. Iniciar o cluster Minikube (driver Hyperkit)
 
 ```bash
-minikube delete
-minikube start --driver=hyperkit --memory=4g --cpus=4
+  minikube delete
+  minikube start --driver=hyperkit --memory=4g --cpus=4
 ```
 
 Verifique o IP:
 
 ``` bash
-minikube ip
+  minikube ip
 ```
 
 ------------------------------------------------------------------------
 
-## 3. Construir a imagem dentro do Minikube
+## 3. Construir a imagem dentro do Minikube ou build via docker e upload no Minikube
 
 ``` bash
-minikube image build -t my-services:0.1 .
+  minikube image build -t my-services:0.1 .
 ```
 
 Verificar se a imagem está dentro do Minikube:
 
 ``` bash
-minikube image ls | grep my-services
+  minikube image ls | grep my-services
+```
+
+Ou 
+
+## Build da imagem local
+
+``` bash
+  docker build -t my-services:0.1 .
+```
+
+## Rodar localmente
+
+``` bash
+  docker run -p 9999:9999 my-services:0.1
+```
+
+Teste
+
+``` bash
+  curl http://localhost:9999/actuator/health
+```
+
+Enviar imagem construída localmente para o minikube
+
+``` bash
+  minikube image load my-services:0.1
 ```
 
 ------------------------------------------------------------------------
