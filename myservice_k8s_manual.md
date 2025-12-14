@@ -265,6 +265,10 @@ helm install vault hashicorp/vault \
 ```
 
 
+
+
+
+
 Não estamos subindo Vault server no cluster
 
 Apenas o Vault Agent Injector
@@ -312,7 +316,7 @@ capabilities = ["read"]
 ```
 
 ``` bash
-vault policy write my-service my-service-policy.hcl
+  vault policy write my-service config/my-service-policy.hcl
 ```
 
 Criar Role ligada ao Namespace
@@ -324,17 +328,8 @@ policies=my-service \
 ttl=24h
 ```
 
-📌 Regra clara:
 
-Só o namespace my-service
-Só o service account my-service-sa
-Só leitura
-
-Criar namespace + ServiceAccount da app
-``` bash
-kubectl create namespace my-service
-```
-
+Criar  sa.yaml
 ``` yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -344,13 +339,13 @@ metadata:
 ```
 
 ``` bash
-kubectl apply -f sa.yaml
+kubectl apply -f k8s/sa.yaml
 ```
 
 Secrets no Vault (formato ENV)
 
 Aqui está o ponto chave do que você quer 👇
-```
+``` bash
 vault kv put secret/my-service \
 SPRING_DATASOURCE_USERNAME=admin \
 SPRING_DATASOURCE_PASSWORD=123456 \

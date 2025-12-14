@@ -23,7 +23,9 @@
 
 ```bash
   minikube delete
-  
+```
+
+```bash
   minikube start --driver=hyperkit --memory=4g --cpus=4
 ```
 
@@ -90,7 +92,9 @@ Aplica configurações ao cluster
 
 ``` bash
   kubens my-service
-  
+```
+
+```bash  
   kubectl apply -f k8s/
 ```
 
@@ -137,7 +141,7 @@ Resultado esperado:
 {"status": "UP"}
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 8. Debug
 
@@ -159,25 +163,18 @@ Resultado esperado:
 ### Logs do Ingress
 
 ``` bash
-kubectl logs -n ingress-nginx deploy/ingress-nginx-controller
+  kubectl logs -n ingress-nginx deploy/ingress-nginx-controller
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 9. Teste alternativo (sem ingress)
 
 ``` bash
-minikube service my-services --url
+  minikube service my-services --url
 ```
 
-------------------------------------------------------------------------
-
-## 10. Conclusão
-
-Fluxo validado com sucesso usando driver Hyperkit e Ingress configurado
-corretamente.
-
-------------------------------------------------------------------------
+---
 
 # Configurando o Vault
 
@@ -187,19 +184,19 @@ corretamente.
 
 ---
 
-## Vault Local Persistente
+## 10. Configura o Vault para persistir localmente
 
 ### Estrutura de diretórios
 
 ```bash
-mkdir -p ~/vault-local/{config,data}
-cd ~/vault-local
+  mkdir -p ~/vault-local/{config,data}
+  cd ~/vault-local
 ```
 
 ### Configuração (`config/vault.hcl`)
 
 ``` bash
-sudo nano config/vault.hcl
+  sudo nano config/vault.hcl
 ```
 
 ```hcl
@@ -216,37 +213,43 @@ ui = true
 ```
 
 ---
+## 11. Configurar url do vault
 
-## Subir o Vault
+``` bash
+  echo 'export VAULT_ADDR=http://127.0.0.1:8200' >> ~/.zshrc
+  source ~/.zshrc
+```
+
+## 12. Subir o Vault
 
 ```bash
-  export VAULT_ADDR=http://127.0.0.1:8200
   vault server -config=config/vault.hcl
 ```
 
----
-
-## Inicialização (uma única vez)
-
-```bash
-  vault operator init
-```
-
-Guarde, ex:
-- Unseal Keys
-- Root Token
-
-Unseal Key 1: ....
-Unseal Key 2: ....
-Unseal Key 3: ....
-Unseal Key 4: ...
-Unseal Key 5: ...
-
-Initial Root Token: 
+> **Se aparecer a mensagem abaixo, é um indicativo que deu certo, vá para o passo 13:**  
+>  proxy environment: http_proxy="" https_proxy="" no_proxy="" \
+> incrementing seal generation: generation=1 \
+> no `api_addr` value specified in config or in VAULT_API_ADDR; falling back to detection if possible, but this value should be manually set \
+> core: Initializing version history cache for core \
+> events: Starting event system \
+> core: seal configuration missing, not initialized \
+> core: security barrier not initialized 
 
 ---
 
-## Unseal (sempre que iniciar)
+## 13. Inicialização (uma única vez), salvando as keys no arquivo
+
+``` bash
+  vault operator init -format=json > vault-init.json
+````
+
+Agora você verá no arquivo vault-init.json:
+- unseal_keys_b64
+- root_token
+
+---
+
+## 14. Unseal (sempre que iniciar)
 
 ```bash
   vault operator unseal
@@ -260,20 +263,50 @@ Initial Root Token:
 
 ---
 
-## Login
+## 15. Login
 
 ```bash
   vault login
 ```
+---
+
+## 16. Resetar o Vault (ambiente local), caso tenha perdido as keys e token
+
+Pare o Vault (CTRL+C)
+
+Apague os dados persistidos
+``` bash
+  rm -rf ~/vault-local
+  mkdir -p ~/vault-local/{config,data}
+```
+
+(ou apague a pasta inteira data)
+
+Suba o Vault novamente
+``` bash
+  vault server -config=config/vault.hcl
+```
+
+Inicialize salvando as keys no arquivo
+``` bash
+  vault operator init -format=json > vault-init.json
+````
+
+Agora você verá no arquivo vault-init.json:
+- unseal_keys_b64
+- root_token
+
+#### Obs. Se precisou fazer o Reset, volte ao passo 14 após obter as keys e token.
 
 ---
 
-## Secrets Engine (KV v2)
+## 17. Cria um Secrets Engine (KV v2)
 
 ```bash
   vault secrets enable -path=secret kv-v2
 ```
 
+Cria uma secret na Secrets Engine
 ```bash
   vault kv put secret/my-service \
 SPRING_DATASOURCE_USERNAME=admin \
@@ -281,9 +314,14 @@ SPRING_DATASOURCE_PASSWORD=123456 \
 APP_API_KEY=abcdef
 ```
 
+Testa vault criada
+``` bash
+  vault kv get secret/my-service
+```
+
 ---
 
-## Vault Agent Injector (no cluster)
+## 18. Subir o Vault Agent Injector no cluster
 
 ```bash
   helm repo add hashicorp https://helm.releases.hashicorp.com
@@ -295,62 +333,100 @@ APP_API_KEY=abcdef
   --set server.enabled=false
 ```
 
+Verifica se foi corretamente criado
+``` bash
+  kubectl get pods -n vault
+```
+
+Você vai ver algo como: `vault-agent-injector-xxxx → Running`
+
 ---
 
-## Auth Kubernetes (Vault fora do cluster)
+## 19. Criar ServiceAccount para o Vault autenticar no cluster
 
-### ServiceAccount reviewer
-
-```bash
-  kubectl create sa vault-auth -n vault
-  kubectl -n vault create token vault-auth
+Criar o arquivo k8s/sa.yaml
 ```
-
-### CA do cluster
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-sa
+  namespace: my-service
+```
 
 ``` bash
-  kubectl apply -f vault-auth-token.yaml
+  kubectl apply -f k8s/sa.yml
 ```
 
-### Obter o JWT do Secret
+## 20. Criar SA no namespace vault
+```bash
+  kubectl create sa vault-auth -n vault
+```
+
+## 21. Criar token manual, k8s/vault-auth-token.yaml:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-auth-token
+  namespace: vault
+  annotations:
+    kubernetes.io/service-account.name: vault-auth
+type: kubernetes.io/service-account-token
+```
+
+``` bash
+  kubectl apply -f k8s/vault-auth-token.yml
+```
+
+## 22. Obter o JWT do Secret
 ``` bash
   kubectl -n vault get secret vault-auth-token \
   -o jsonpath='{.data.token}' | base64 --decode
 ```
 
-### Verificar se o Secret foi ligado ao SA
+Esse é o token que o Vault vai usar para falar com a API do Kubernetes
+
+## 23. Verificar se o Secret foi ligado ao SA
 ``` bash
   kubectl -n vault describe sa vault-auth
 ```
 
-### Configurar auth no Vault
+Deve listar o secret vault-auth-token
+
+## 24. Configurar auth Kubernetes no Vault
 
 ```bash
   vault auth enable kubernetes
 ```
 
-### Agora use esse token no Vault
+## 25. Criar CA do cluster (local):
 ``` bash
-  vault write auth/kubernetes/config \
-token_reviewer_jwt="eyJhbGciOiJSUzI1NiIsImtpZCI6IjVleHpQS1dzMDNyd0lEV2l0RHpOTk1SNmhVdmVSV3dKUm5rMkFNdmsydWMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJ2YXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJ2YXVsdC1hdXRoLXRva2VuIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InZhdWx0LWF1dGgiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJhMTE3ZWZhOC0yNjY4LTQyZmMtODBjNy00NTJjOGNhNzJmZWEiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6dmF1bHQ6dmF1bHQtYXV0aCJ9.FxrDqsrIGHxSJfHiQ1kbQT1_yGKb7x9JnPBgyjzW5pOA3P4TrdcdJYiPhjIxoq2___E6hEn2v3IjORhSRsPfC1ZL9Nsw7_w2eE36wybU0lW4iOsE-9sc13WlwH08dsmEdfz5zV-nN5g5o7p1VpJyzyBd8pbk4bkbuGXlnGzTgDFXLJoHlWskpToCpo4TbLFihlcoBc821sJjZU4I5k73cYRv_R2MvqU4JjbcIzLyETP-bGby5VQvfQreU5orUaogEZr2HFj3PWw3e5eacbZrBxAxaOwOFtgIllYESHPnaeuEE77Ke-YSkCr3LMOCWeyKZUItwYcCgK3I-jiNashTEA%" \
-kubernetes_host="$(kubectl config view --raw --minify -o jsonpath='{.clusters[0].cluster.server}')" \
-kubernetes_ca_cert=@/tmp/ca.crt
-```
-
-```bash
   kubectl config view --raw --minify --flatten \
 -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' \
 | base64 --decode > /tmp/ca.crt
 ```
 
+## 26. Configurar auth:
+``` bash
+  vault write auth/kubernetes/config \
+token_reviewer_jwt="<TOKEN_DO_PASSO_22>" \
+kubernetes_host="$(kubectl config view --raw --minify \
+-o jsonpath='{.clusters[0].cluster.server}')" \
+kubernetes_ca_cert=@/tmp/ca.crt
+```
+
+Aqui fecha Vault ↔ Kubernetes
+
 ---
 
-## Policy
+## 27. Criar Policy no Vault 
 
-```hcl
+Arquivo config/my-service-policy.hcl
+```yaml
 path "secret/data/my-service" {
   capabilities = ["read"]
 }
+
 ```
 
 ```bash
@@ -359,10 +435,10 @@ path "secret/data/my-service" {
 
 ---
 
-## Role Kubernetes
+## 28. Criar Role Kubernetes no Vault
 
 ```bash
-vault write auth/kubernetes/role/my-service \
+  vault write auth/kubernetes/role/my-service \
   bound_service_account_names=my-service-sa \
   bound_service_account_namespaces=my-service \
   policies=my-service \
@@ -371,13 +447,15 @@ vault write auth/kubernetes/role/my-service \
 
 ---
 
-## Injeção de secrets no Pod (em memória)
+## 29. Injeção de secrets no Pod 
 
+Injeção como env, k8s/deployment.yml
 ```yaml
 annotations:
   vault.hashicorp.com/agent-inject: "true"
   vault.hashicorp.com/role: "my-service"
   vault.hashicorp.com/agent-inject-secret-env: "secret/data/my-service"
+  
   vault.hashicorp.com/agent-inject-template-env: |
     {{- with secret "secret/data/my-service" -}}
     {{- range $k, $v := .Data.data }}
@@ -386,16 +464,15 @@ annotations:
     {{- end }}
 ```
 
+Container
 ```yaml
-command: ["/bin/sh", "-c"]
-args:
-  - |
-    source /vault/secrets/env && java -jar app.jar
+command: ["java"]
+args: ["-jar", "app.jar"]
 ```
 
 ---
 
-## Observações finais
+## 30. Observações finais
 
 - Vault **não** acessa `/var/run/secrets/...`
 - Secrets **não** vão para etcd
