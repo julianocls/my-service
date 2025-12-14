@@ -236,26 +236,26 @@ Guarde, ex:
 - Unseal Keys
 - Root Token
 
-Unseal Key 1: yoDNJ2sDp0OyonQ8qnGasWUzz1TK2YUEwl15yvcBRDbp
-Unseal Key 2: wBiDT2aB0B6uGCvZMROCW/cMLLJLnXV6ziDqkkEjXZf0
-Unseal Key 3: YA2bVTbK85r3j2UnNtyLUpQVUepGCgYOjggSO76/EYpO
-Unseal Key 4: eyktxLyGHRxOn9ZXlk944mbK99XQVkc0igsQBgB5/XDi
-Unseal Key 5: rnJz0OqlEvTEoEZAYnDrB1pb5t2fe614HoPE6c26KvEq
+Unseal Key 1: 
+Unseal Key 2: 
+Unseal Key 3: 
+Unseal Key 4: 
+Unseal Key 5: 
 
-Initial Root Token: hvs.8xZsVosCNM5kHzBr1YCZTTsB
+Initial Root Token: 
 
 ---
 
 ## Unseal (sempre que iniciar)
 
 ```bash
-vault operator unseal
-vault operator unseal
-vault operator unseal
+  vault operator unseal
+  vault operator unseal
+  vault operator unseal
 ```
 
 ```bash
-vault status
+  vault status
 ```
 
 ---
@@ -263,7 +263,7 @@ vault status
 ## Login
 
 ```bash
-vault login
+  vault login
 ```
 
 ---
@@ -271,11 +271,11 @@ vault login
 ## Secrets Engine (KV v2)
 
 ```bash
-vault secrets enable -path=secret kv-v2
+  vault secrets enable -path=secret kv-v2
 ```
 
 ```bash
-vault kv put secret/my-service \
+  vault kv put secret/my-service \
 SPRING_DATASOURCE_USERNAME=admin \
 SPRING_DATASOURCE_PASSWORD=123456 \
 APP_API_KEY=abcdef
@@ -286,10 +286,10 @@ APP_API_KEY=abcdef
 ## Vault Agent Injector (no cluster)
 
 ```bash
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm repo update
+  helm repo add hashicorp https://helm.releases.hashicorp.com
+  helm repo update
 
-helm install vault hashicorp/vault \
+  helm install vault hashicorp/vault \
   --namespace vault \
   --set injector.enabled=true \
   --set server.enabled=false
