@@ -10,13 +10,9 @@
   brew install fzf
   $(brew --prefix)/opt/fzf/install
     
-  kubectl create namespace my-service
-  kubectl create sa my-service-sa -n my-service
-    
   brew tap hashicorp/tap
   brew install hashicorp/tap/vault
     
-  kubectl create namespace vault
   brew install helm@3
   brew link --force helm@3
 ```
@@ -27,16 +23,18 @@
 
 ```bash
   minikube delete
+  
   minikube start --driver=hyperkit --memory=4g --cpus=4
 ```
 
-Verifique o IP:
+Configurando Ingress
 
 ``` bash
-  minikube ip
+  minikube addons enable ingress
+  kubectl get pods -n ingress-nginx
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 3. Construir a imagem dentro do Minikube ou build via docker e upload no Minikube
 
@@ -64,7 +62,7 @@ Ou
   docker run -p 9999:9999 my-services:0.1
 ```
 
-Teste
+Teste container
 
 ``` bash
   curl http://localhost:9999/actuator/health
@@ -76,47 +74,61 @@ Enviar imagem construída localmente para o minikube
   minikube image load my-services:0.1
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 4. Aplicar Deployment, Service e Ingress
 
+Cria os namespace da aplicação
+
 ``` bash
-kubectl apply -f k8s/deployment.yml
-kubectl apply -f k8s/service.yml
-kubectl apply -f k8s/ingress.yml
+  kubectl create namespace my-service
+  kubectl create sa my-service-sa -n my-service
+  kubectl create namespace vault
 ```
 
-------------------------------------------------------------------------
+Aplica configurações ao cluster
+
+``` bash
+  kubens my-service
+  
+  kubectl apply -f k8s/
+```
+
+---
 
 ## 5. Verificar recursos
 
 ``` bash
-kubectl get pods
-kubectl get svc
-kubectl get ingress
-kubectl get endpoints my-services
+  ##kubens
+  kubectl get pods
+  kubectl get svc
+  kubectl get ingress
+  kubectl get endpoints my-services
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 6. Atualizar /etc/hosts
 
-Adicionar:
+Obtém linha de configuração:
 
-    <minikube-ip> myservices.local
+``` bash
+  echo $(minikube ip) myservices.local
+```
 
-Exemplo:
+Adicionar o resultado acima no /etc/hosts
+``` bash
+  sudo nano /etc/hosts
+```
 
-    192.168.64.2 myservices.local
-
-------------------------------------------------------------------------
+---
 
 ## 7. Testar via Ingress
 
 Como o ingress depende do host virtual, o curl deve enviar o header:
 
 ``` bash
-curl -H "Host: myservices.local" http://$(minikube ip)/actuator/health
+  curl -H "Host: myservices.local" http://$(minikube ip)/actuator/health
 ```
 
 Resultado esperado:
@@ -132,15 +144,16 @@ Resultado esperado:
 ### Ver logs do app
 
 ``` bash
-kubectl logs <POD>
+  kubectl get pods                                    
+  kubectl logs -f deployment/my-services
 ```
 
 ### Exec busybox para testar acessos internos
 
 ``` bash
-kubectl run tmp --rm -i --tty --image=busybox -- sh
+  kubectl run tmp --rm -i --tty --image=busybox -- sh
 
-wget -qO- http://my-services:80/actuator/health
+  wget -qO- http://my-services:80/actuator/health
 ```
 
 ### Logs do Ingress
@@ -216,7 +229,7 @@ ui = true
 ## Inicialização (uma única vez)
 
 ```bash
-vault operator init
+  vault operator init
 ```
 
 Guarde, ex:
@@ -273,10 +286,6 @@ APP_API_KEY=abcdef
 ## Vault Agent Injector (no cluster)
 
 ```bash
-kubectl create namespace vault
-```
-
-```bash
 helm repo add hashicorp https://helm.releases.hashicorp.com
 helm repo update
 
@@ -293,8 +302,8 @@ helm install vault hashicorp/vault \
 ### ServiceAccount reviewer
 
 ```bash
-kubectl create sa vault-auth -n vault
-kubectl -n vault create token vault-auth
+  kubectl create sa vault-auth -n vault
+  kubectl -n vault create token vault-auth
 ```
 
 ### CA do cluster

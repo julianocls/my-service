@@ -18,24 +18,28 @@ spec:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "my-service"
         vault.hashicorp.com/vault-address: "http://host.minikube.internal:8200"
-        vault.hashicorp.com/agent-inject-secret-env: "secret/data/my-service"
-        vault.hashicorp.com/agent-inject-template-env: |
+
+        # 🔑 Vault injeta ENV diretamente
+        vault.hashicorp.com/agent-inject-secret-config: "secret/data/my-service"
+        vault.hashicorp.com/agent-inject-template-config: |
           {{- with secret "secret/data/my-service" -}}
           {{- range $k, $v := .Data.data }}
-          export {{ $k }}="{{ $v }}"
+          {{ $k }}={{ $v }}
           {{- end }}
           {{- end }}
+
     spec:
       serviceAccountName: my-service-sa
       terminationGracePeriodSeconds: 5
+
       containers:
         - name: my-services
           image: my-services:0.1
           imagePullPolicy: IfNotPresent
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              source /vault/secrets/env && exec java $JAVA_OPTS -jar app.jar
+
+          # 🚫 SEM command / args
+          # Dockerfile continua mandando
+
           ports:
             - containerPort: 9999
               name: http
@@ -56,14 +60,12 @@ spec:
             httpGet:
               path: /actuator/health
               port: 9999
-            initialDelaySeconds: 12
+            initialDelaySeconds: 15
             periodSeconds: 10
-            failureThreshold: 3
 
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 9999
-            initialDelaySeconds: 25
+            initialDelaySeconds: 30
             periodSeconds: 15
-            failureThreshold: 3
